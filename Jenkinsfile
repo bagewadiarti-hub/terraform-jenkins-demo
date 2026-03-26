@@ -5,51 +5,50 @@ pipeline {
     TF_IN_AUTOMATION = 'true'
   }
 
-   tools {
-        terraform 'terraform'
-    }
+  tools {
+    terraform 'terraform'
+  }
 
   stages {
 
-    stage('Checkout')  {
-        steps {
-          echo '=== Checking out code from Gitlab ===='
-          checkout scm
-        }
-    }
-
-    stage ('Tearrform init') {
-        steps {
-          echo '  ===== Initializing terraform   ====='
-          bat 'terraform version'
-          bar 'terraform init'
-        }
-    }
-
-    stage ('Tearrform Apply') {
+    stage('Checkout') {
       steps {
-          echo '  =======  Applying Terraform - NO plan stage, direct apply ===='
-          bat 'terraform apply -auto-approve'
+        echo '=== Checking out code ===='
+        checkout scm
       }
     }
 
-    stage ('Verify Deployment') {
-       steps {
-         echo '====== Verifying conatiner is running   ======='
-         bat 'tearrform output'
-         bat 'docker ps --filter "name=jenkins-terraform-ngnix"'
-       }
+    stage('Terraform Init') {
+      steps {
+        echo '===== Initializing Terraform ====='
+        bat 'terraform init'
+      }
+    }
+
+    stage('Terraform Apply') {
+      steps {
+        echo '===== Applying Terraform (No Plan) ====='
+        bat 'terraform apply -auto-approve'
+      }
+    }
+
+    stage('Verify Deployment') {
+      steps {
+        echo '===== Verifying container is running ====='
+        bat 'terraform output'
+        bat 'docker ps'
+      }
     }
   }
 
   post {
     success {
-      echo 'SUCCESS: ngnix container deployed via Terraform!'
-      echo 'Visit http://localhost:8090 to see it running'
+      echo 'SUCCESS: nginx container deployed via Terraform!'
+      echo 'Visit http://localhost:8090'
     }
     failure {
-      echo 'FAILED: Check logs for above error'
-      bat 'tearrform destroy -auto-approve || exit 0'
+      echo 'FAILED: Check logs'
+      bat 'terraform destroy -auto-approve || exit 0'
     }
   }
 }
