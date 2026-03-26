@@ -1,33 +1,34 @@
 terraform {
   required_providers {
-   docker = {
-    source = "kreuzwerker/docker"
-    version = "~> 3.0"
+    docker = {
+      source  = "kreuzwerker/docker"
+      version = "~> 3.0"
     }
   }
 }
 
 provider "docker" {
-  host = "npipe:////./pipe/docker_engine"
+  host = "unix:///var/run/docker.sock"
 }
 
-resouce "docker_image" "nginx" {
-  name = "nginx:alpine"
+resource "docker_image" "nginx" {
+  name         = "nginx:alpine"
   keep_locally = true
 }
 
 resource "docker_container" "web" {
-  name = "jenkins-terraform-ngnix"
-  image = docker_image.ngnix.image_id
+  name  = "jenkins-terraform-nginx"
+  image = docker_image.nginx.image_id
 
-ports {
-  internal = 80
-  external = 8090
-}
-labels {
-  label = "deployed_by"
-  value = "jenkins-terraform"
-}
+  ports {
+    internal = 80
+    external = 8090
+  }
+
+  labels {
+    label = "deployed_by"
+    value = "jenkins-terraform"
+  }
 }
 
 output "container_name" {
@@ -35,7 +36,5 @@ output "container_name" {
 }
 
 output "container_url" {
-  value = ""http://localhost:8090"
+  value = "http://localhost:8090"
 }
-
-
